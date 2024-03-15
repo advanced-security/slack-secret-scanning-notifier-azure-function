@@ -6,7 +6,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 . "${SCRIPT_DIR}"/azure.env
 
-# set Azure location to us-east unless it is set to something different already
+# set a storage account name if not already set in the azure.envslack
 AZURE_STORAGE_ACCOUNT="${AZURE_STORAGE_ACCOUNT:-slacksecretnotifier001sa}"
 
 az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
