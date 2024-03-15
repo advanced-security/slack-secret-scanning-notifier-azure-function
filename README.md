@@ -5,6 +5,9 @@
 
 This project sends notifications to a **Slack** channel when a secret scanning event happens in [GitHub Advanced Security](https://docs.github.com/en/enterprise-cloud@latest/get-started/learning-about-github/about-github-advanced-security).
 
+> [!NOTE]
+> Want the same, but for Teams? 👉 [Teams Secret Scanning notifier](https://github.com/advanced-security/teams-secret-scanning-notifier-azure-function)
+
 It is implemented as an [Azure Function](https://learn.microsoft.com/en-us/azure/azure-functions/), and installed as a [GitHub App](https://docs.github.com/en/apps). It uses a Slack incoming webhook.
 
 It needs you to deploy the function on Azure, and to create a GitHub App and install it on an org or repo.
