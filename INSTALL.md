@@ -2,18 +2,41 @@
 
 To get this Azure Function working, you need to:
 
-1. create a GitHub App
-2. create an Azure Function app, and deploy this Azure Function to it
-3. configure the Azure Function with the GitHub App's private key, webhook secret, and the GitHub App's ID
-4. configure the Azure Function with the Slack webhook URL
-5. configure the GitHub App with the Azure Function's URL as the webhook
-6. install the GitHub App on the organization and set it to be active on the whole organization or the repositories you want
+1. create or edit a Slack App and get a webhook URL
+2. create a GitHub App
+3. create an Azure Function app, and deploy this Azure Function to it
+4. configure the Azure Function with the GitHub App's private key, webhook secret, and the GitHub App's ID
+5. configure the Azure Function with the Slack webhook URL
+6. configure the GitHub App with the Azure Function's URL as the webhook
+7. install the GitHub App on the organization and set it to be active on the whole organization or the repositories you want
 
 > [!NOTE]
 > When working with the Azure CLI, remember to use `az login` to log in to Azure, and `az logout` first if you are having problems.
 
 > [!NOTE]
 > To use the Bash (use WSL on Windows for Bash) scripts in the `scripts` directory, set your Azure settings in a `azure.env` file that they pick up from the same directory. You may need to change settings if you want to vary the region the Function is used in, or change its name to allow more than one to coexist in the same subscription.
+
+> [!WARNING]
+> Don't get confused between the Slack webhook and the Azure Function webhook.
+>
+> The Slack webhook is configured in the Azure Function, and the Azure Function webhook is configured in the GitHub App.
+
+## Creating a Slack App and getting a webhook URL
+
+You need to create a Slack App, and get a webhook URL for it. You can use the UI to do this.
+
+### Use the Slack UI to create a new Slack App
+
+1. Go to the [new Slack App page](https://api.slack.com/apps?new_app=1)
+2. Choose the "From scratch" option
+3. Name it something like "Secret Scanning Notifier", and choose the workspace you want to create it in
+4. Click on the "Create App" button
+
+Under "Add features and functionality", choose "Incoming Webhooks", and toggle the switch to "On".
+
+Click on the "Add New Webhook to Workspace" button, and choose the channel you want to post to.
+
+You will be given a new Slack webhook URL. Copy this and save it somewhere safe, as you will need it later to configure the Azure Function you will create.
 
 ## Creating a GitHub app
 
@@ -41,7 +64,7 @@ You will need a name, a description, a homepage URL (which can just be `https://
 - uncheck the "Active" checkbox for the webhook, since we have not yet created the Azure Function
 - use a secure secret for the webhook secret, since this authenticates that this GitHub App is making requests to your Functions App
   - ⚠️ save the webhook secret somewhere safe, and generate it securely. It's best to do this using a password manager or key vault
-- give the GitHub App read and write access to Actions under the repository permissions
+- give the GitHub App read access to Secret scanning alerts under the repository permissions
 - leave the option selected to "Enable SSL verification"
 - click on the "Create GitHub App" button
 
@@ -51,12 +74,6 @@ Once it is created, you will need to download the private key.
   - ⚠️ save the private key somewhere safe - _this is the only time you get to download it_, and you will need it later
 
 [The full GitHub docs](https://docs.github.com/en/enterprise-cloud@latest/apps/creating-github-apps/registering-a-github-app/registering-a-github-app) can help you if you get stuck.
-
-### Use the GitHub API to create a new GitHub App
-
-> **TODO**
-
-This is possible [using a manifest](https://docs.github.com/en/enterprise-cloud@latest/apps/sharing-github-apps/registering-a-github-app-from-a-manifest), but has not yet been implemented here.
 
 ## Deploying the Azure Function
 
@@ -112,8 +129,10 @@ where `APP_ID` is the ID of the GitHub App you created earlier, `PRIVATE_KEY` is
 The private key should be a single line, removing the whitespace in the `.pem` file, like:
 
 ```text
------BEGIN RSA PRIVATE KEY----- MIAAA...AAA== -----END RSA PRIVATE KEY-----
+-----BEGIN RSA PRIVATE KEY-----MIAAA...AAA==-----END RSA PRIVATE KEY-----
 ```
+
+You can use the `pem-to-one-liner.sh` script to do this, which just uses `tr` to remove the line breaks.
 
 It is also possible to set these directly in the Azure Portal, but you may prefer to configure them in code.
 
@@ -192,6 +211,8 @@ There are a couple of ways to deploy the function to the Function App with the V
 
 You need to find the URL of the Function to set up the GitHub App's webhook.
 
+This is returned when you deploy the function to the Function App using the `deploy.sh` script. If you used a different method, you may need to find it manually.
+
 You can use the Azure Portal, the Azure CLI, or the VSCode Azure Functions extension to do this.
 
 If you can't find the Function under the Functions App, you may need to click on the "Refresh" button in the top menu. If that doesn't work, there may be an error in the Function's code or settings. Check that you can debug the Function locally, to see if there are any mistakes in the configuration, especially the `PRIVATE_KEY` setting.
@@ -218,7 +239,7 @@ Open up the Function App, and expand the Functions node. Right-click on the Func
 
 Fill in the details you now know from the Function App and installed Function into the GitHub App's settings.
 
-- select the `secret_scanning_alert` event under "Permissions & events"
+- select the `secret_scanning_alert` event under "Permissions & events" and click "Save" at the bottom of the page
   - ⚠️ carefully think about the security implications of giving the Functions App access to these events
 - set the webhook URL to the URL of the Function
 - set the webhook to Active by checking the box
@@ -232,11 +253,3 @@ You need to install the GitHub App on an organization or repository.
 - navigate to the GitHub App you created earlier, and click on the "Install App" button
 - choose which organization to install it on
 - choose whether to install it for selected repositories, or for the whole organization
-
-### Use the GitHub API to install the GitHub App
-
-> **TODO**
-
-This has not been implemented yet.
-
-This is left until the creation of the app using a manifest has been implemented.
