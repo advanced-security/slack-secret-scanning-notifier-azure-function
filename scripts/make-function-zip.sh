@@ -5,7 +5,10 @@ set -euo pipefail
 # Make the Function zip archive for deployment to the Azure Functions App
 
 rm slack-secret-scanning-notifier.zip >/dev/null 2>&1 || echo "[.] No existing zip file to remove"
+
+npm install >/dev/null 2>&1
 npm run build >/dev/null 2>&1
+
 zip -q -r slack-secret-scanning-notifier.zip . \
 -x 'slack-secret-scanning-notifier.zip' '.vscode/*' '*settings*.json' \
     '.git/*' '.github/*' '.gitignore' '.eslint*' '.funcignore' '*.md' \
